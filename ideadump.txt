@@ -1,0 +1,4 @@
+espace commun (tableau) où les tuples sont stockés ? + tableau des types associés
+classe TupleSpace ?
+1 agent = 1 fonction
+in, rd, out
