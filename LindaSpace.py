@@ -54,8 +54,8 @@ class LindaSpace:
 # Agent capteur H2O
 def agentCapteurH2O(ls):
     niveau_H2O = random.uniform(1.0, 5.0)
-    print("Agent capteur H2O")
-    print(niveau_H2O)
+    print("Agent capteur H2O\n")
+    print(str(niveau_H2O)+"\n")
     ls.inp(("niveau_H2O",str, None, type(niveau_H2O)))
     ls.out(("niveau_H2O",str, niveau_H2O, type(niveau_H2O)))
     # print("Tuplespace:", ls)
@@ -65,7 +65,7 @@ def agentCapteurH2O(ls):
 # Agent capteur CH4
 def agentCapteurCH4(ls):
     niveau_CH4 = random.uniform(0.1, 0.9)
-    print("Agent capteur CH4")
+    print("Agent capteur CH4\n")
     ls.inp(("niveau_CH4",str, None, type(niveau_CH4)))
     ls.out(("niveau_CH4",str, niveau_CH4, type(niveau_CH4)))
     # print("Tuplespace:", ls)
@@ -75,7 +75,7 @@ def agentCapteurCH4(ls):
 # Agent capteur CO
 def agentCapteurCO(ls):
     niveau_CO = random.uniform(0.1, 0.9)
-    print("Agent capteur CO")
+    print("Agent capteur CO\n")
     ls.inp(("niveau_CO2",str, None, type(niveau_CO)))
     ls.out(("niveau_CO2",str, niveau_CO, type(niveau_CO)))
     # print("Tuplespace:", ls)
@@ -84,35 +84,41 @@ def agentCapteurCO(ls):
 
 def pompe(ls,etat):
     while True:
-        etat_pompe_ac = ls.rd(("activation_pompe", str))
-        etat_pompe_des = ls.rd(("desactivation_pompe", str))
-        # print(etat_pompe_ac)
-        # print(etat_pompe_des)
-        if(len(etat_pompe_ac) > 0):
-            ls.inp(("activation_pompe", str))
-            print("Pompe activée")
-        elif(len(etat_pompe_des) > 0):
-            ls.inp(("desactivation_pompe", str))
-            print("Pompe désactivée")
+        activation_signal = ls.inp(("activation_pompe", str))
+        if activation_signal:
+            etat = "activée"
+            print("Pompe activée\n")
+
+        deactivation_signal = ls.inp(("desactivation_pompe", str))
+        if deactivation_signal:
+            etat = "désactivée"
+            print("Pompe désactivée\n")
+
         time.sleep(2)
     
 
-def ventilateur(ls,etat):
+def ventilateur(ls, etat):
     while True:
-        etat_ventilateur_ac = ls.rd(("activation_ventilateur", str))
-        etat_ventilateur_des = ls.rd(("desactivation_ventilateur", str))
-        if(len(etat_ventilateur_ac) > 0):
-            ls.inp(("activation_ventilateur", str))
-            print("Ventilateur activé")
-        elif(len(etat_ventilateur_des) > 0):        
-            ls.inp(("desactivation_ventilateur", str))
-            print("Ventilateur désactivé")
+        activation_signal = ls.inp(("activation_ventilateur", str))
+        if activation_signal:
+            etat = "activée"
+            print("Ventilateur activé\n")
+
+        deactivation_signal = ls.inp(("desactivation_ventilateur", str))
+        if deactivation_signal:
+            etat = "désactivée"
+            print("Ventilateur désactivé\n")
+
+        time.sleep(2)
     
 def agentH2O_haut(ls,seuil_haut):
     h2o_haut = ls.rd(("detection_H2O_haut", str))
     if(len(h2o_haut) > 0):
-        x = ls.rd(("niveau_H2O", str, None , float))[0][2]
-        print("Niveau H2O: ", x)
+        x = ls.rd(("niveau_H2O", str, None , float))
+        if(len(x) > 0):
+            x = x[0][2]
+        # print("Niveau H2O: ", x)
+        # print("\n")
         if(x > seuil_haut):
             ls.out(("H2O_detect",str))
             ls.inp(("detection_H2O_haut", str))
@@ -123,8 +129,12 @@ def agentH2O_haut(ls,seuil_haut):
 def agentCommandePompeVentilateur(ls,seuil_CH4,seuil_CO):
     while True:
         ls.inp(("detection_H2O_haut",str))
-        y = ls.rd(("niveau_CH4", str, None , float))[0][2]
-        z = ls.rd(("niveau_CO", str, None , float))[0][2]
+        y = ls.rd(("niveau_CH4", str, None , float))
+        if(len(y) > 0):
+            y = y[0][2]
+        z = ls.rd(("niveau_CO", str, None , float))
+        if(len(z) > 0):
+            z = z[0][2]
         if(y < seuil_CH4 and z < seuil_CO):
             ls.out(("activation_pompe", str))
             ls.out(("detection_H2O_bas",str))
@@ -136,8 +146,14 @@ def agentCommandePompeVentilateur(ls,seuil_CH4,seuil_CO):
 def agentGazBas(ls,seuil_CH4, seuil_CO):
     gazBas = ls.rd(("detection_gaz_bas",str))
     if(len(gazBas) > 0):
-        y = ls.rd(("niveau_CH4", str, None , float))[0][2]
-        z = ls.rd(("niveau_CO", str, None , float))[0][2]
+        y = ls.rd(("niveau_CH4", str, None , float))
+        if(len(y) > 0):
+            y = y[0][2]
+        z = ls.rd(("niveau_CO", str, None , float))
+        if(len(z) > 0):
+            z = z[0][2]
+        print("\nNiveau CH4: ", y)
+        print("\nNiveau CO: ", z)
         if(y < seuil_CH4 and z < seuil_CO):
             ls.out(("activation_pompe",str))
             ls.out(("detection_H2O",str))
@@ -150,25 +166,37 @@ def agentSurveillanceGazHaut(ls,seuil_CH4, seuil_CO):
     while True:
         gazHaut = ls.rd(("detection_gaz_haut",str))
         if(len(gazHaut) > 0):
-            y = ls.rd(("niveau_CH4", str, None , float))[0][2]
-            z = ls.rd(("niveau_CO", str, None , float))[0][2]
+            y = ls.rd(("niveau_CH4", str, None , float))
+            if(len(y) > 0):
+                y = y[0][2]
+            z = ls.rd(("niveau_CO", str, None , float))
+            if(len(z) > 0):
+                z = z[0][2]
+            print("\nNiveau CH4: ", y)
+            print("\nNiveau CO: ", z)
             if(y < seuil_CH4 and z < seuil_CO):
                 ls.out(("desactivation_ventilateur",str))
                 ls.out(("detection_H2O",str))
                 ls.inp(("detection_gaz_haut",str))
+            time.sleep(2)
 
 def agentH2O_bas(ls,seuil_bas):
     while True:
         eau_bas = ls.rd(("detection_H2O_bas",str))
         if(len(eau_bas) > 0):
-            x = ls.rd(("niveau_H2O", str, None , float))[0][2]
-            print("Niveau H2O: ", x)
+            x = ls.rd(("niveau_H2O", str, None , float))
+            if(len(x) > 0):
+                x = x[0][2]
+            # print("Niveau H2O: ", x)
+            # print("\n")
             if(x < seuil_bas):
                 ls.out(("desactivation_pompe",str))
                 ls.out(("desactivation_ventilateur",str))
                 ls.inp(("detection_H2O_bas",str))
                 ls.inp(("detection_gaz_haut",str))
                 ls.out(("detection_H2O_haut",str))
+            else:
+                ls.out(("activation_pompe",str))
 
 # Exemple d'utilisation
 if __name__ == "__main__":
@@ -192,7 +220,7 @@ if __name__ == "__main__":
     gaz_bas_thread = threading.Thread(target=agentGazBas, args=(ls, SEUIL_CH4, SEUIL_CO))
     surveillance_gaz_haut_thread = threading.Thread(target=agentSurveillanceGazHaut, args=(ls, SEUIL_CH4, SEUIL_CO))
     h2o_bas_thread = threading.Thread(target=agentH2O_bas, args=(ls, SEUIL_H2O_BAS))
-    # ventilateur_thread = threading.Thread(target=ventilateur, args=(ls,"off"))
+    ventilateur_thread = threading.Thread(target=ventilateur, args=(ls,"off"))
     pompe_thread = threading.Thread(target=pompe, args=(ls,"off"))
     commande_thread = threading.Thread(target=agentCommandePompeVentilateur, args=(ls, SEUIL_CH4, SEUIL_CO))
 
@@ -203,7 +231,7 @@ if __name__ == "__main__":
     gaz_bas_thread.start()
     surveillance_gaz_haut_thread.start()
     h2o_bas_thread.start()
-    # ventilateur_thread.start()
+    ventilateur_thread.start()
     pompe_thread.start()
     commande_thread.start()
 
@@ -214,6 +242,6 @@ if __name__ == "__main__":
     gaz_bas_thread.join()
     surveillance_gaz_haut_thread.join()
     h2o_bas_thread.join()
-    # ventilateur_thread.join()
+    ventilateur_thread.join()
     pompe_thread.join()
     commande_thread.join() 
