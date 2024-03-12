@@ -1,52 +1,69 @@
-class TupleSpace:
-    def __init__(self):
-        self.tuples = {}
+import threading
+from LindaSpace import LindaSpace
+from agentCapteur import agentCapteurCH4, agentCapteurCO, agentCapteurH2O
+from agentMachine import agentCommandePompeVentilateur, pompe, ventilateur
+from agentSeuil import agentGazBas, agentGazHaut, agentH2O_bas, agentH2O_haut
 
-        #{
-        #     capteur_CH4 : {
-        #         niveau_CH4 : (string, ""), 
-        #         valeur_ch4 : float
-        #     },
-        #     capteur_H2O : {
-        #         niveau_H2O : string
-        #         valeur_h20 : float
-        #     },
-        # }
-    
-    def __str__(self):
-        return str(self.tuples)
-        # res = ""
-        # for i in range(len(self.tuplesTypes)):
-        #     res += self.tuplesTypes[i] + " " + str(self.tuples[self.tuplesTypes[i]]) + "\n"
-        # return res
-    
-    def inp(self, tupleName, valueName):
-        print("coucou")
+SEUIL_H2O_HAUT = 4.0
+SEUIL_H2O_BAS = 2.0
+SEUIL_CH4 = 0.5
+SEUIL_CO = 0.5
+
+niveau_H2O = 5.0
+niveau_CH4 = 0.3
+niveau_CO = 0.3
 
 
-    def rd(self, tupleName):
-        return self.tuples[tupleName]
-    
-    def out(self, tupleName, valueName, value):
-        # if tuple[0] in self.tuples.keys:
-        #     self.tuples[tuple[0]] = tuple[1]
-        # else:
-        #     self.tuplesTypes.append(tupleType)
-        #     self.tuples[tuple[0]] = tuple[1]
-        if tupleName in self.tuples:
-            self.tuples[tupleName][valueName] = value
-        else:
-            self.tuples[tupleName] = {valueName: value}
-                
-
-
-
-
+# Exemple d'utilisation
 if __name__ == "__main__":
-    ts = TupleSpace()
-    # ts.tuplesTypes = ["a", "b", "c"]
-    # ts.tuples = {"a": [1, 2, 3], "b": [4, 5, 6], "c": [7, 8, 9]}
-    # tuplesFinal = [tuplesTypes[0] : tuples[0], tuplesTypes[1] : tuples[1], tuplesTypes[2] : tuples[2]]
-    ts.out("String", ("niveau_H2O",))
-    print(ts)
+    ls = LindaSpace()
+
+    # Définition des niveau pour débuter le système
+    print("Démarrage du système minier\n\n")
+    print("Seuil H2O haut: ", SEUIL_H2O_HAUT)
+    print("\nSeuil H2O bas: ", SEUIL_H2O_BAS)
+    print("\nSeuil CH4: ", SEUIL_CH4)
+    print("\nSeuil CO: ", SEUIL_CO)
+    print("\n")
+    ls.out(("niveau_H2O", str, niveau_H2O, type(niveau_H2O)))
+    ls.out(("niveau_CH4", str, niveau_CH4, type(niveau_CH4)))
+    ls.out(("niveau_CO", str, niveau_CO, type(niveau_CO)))
+
+    # ls.out(("activation_pompe", str))
+    # print("Tuplespace:", ls)
+    # print("rd:", ls.rd(("activation_pompe", str)))
+    # print("inp:", ls.inp(("activation_pompe", str)))
+    # print("Tuplespace:", ls)
     
+    capteur_h2o_thread = threading.Thread(target=agentCapteurH2O, args=(ls,))
+    capteur_ch4_thread = threading.Thread(target=agentCapteurCH4, args=(ls,))
+    capteur_co_thread = threading.Thread(target=agentCapteurCO, args=(ls,))
+    h2o_haut_thread = threading.Thread(target=agentH2O_haut, args=(ls, SEUIL_H2O_HAUT))
+    gaz_bas_thread = threading.Thread(target=agentGazBas, args=(ls, SEUIL_CH4, SEUIL_CO))
+    surveillance_gaz_haut_thread = threading.Thread(target=agentGazHaut, args=(ls, SEUIL_CH4, SEUIL_CO))
+    h2o_bas_thread = threading.Thread(target=agentH2O_bas, args=(ls, SEUIL_H2O_BAS))
+    ventilateur_thread = threading.Thread(target=ventilateur, args=(ls,"off"))
+    pompe_thread = threading.Thread(target=pompe, args=(ls,"off"))
+    commande_thread = threading.Thread(target=agentCommandePompeVentilateur, args=(ls, SEUIL_CH4, SEUIL_CO))
+
+    capteur_h2o_thread.start()
+    capteur_ch4_thread.start()
+    capteur_co_thread.start()
+    h2o_haut_thread.start()
+    gaz_bas_thread.start()
+    surveillance_gaz_haut_thread.start()
+    h2o_bas_thread.start()
+    ventilateur_thread.start()
+    pompe_thread.start()
+    commande_thread.start()
+
+    capteur_h2o_thread.join()
+    capteur_ch4_thread.join()
+    capteur_co_thread.join()
+    h2o_haut_thread.join()
+    gaz_bas_thread.join()
+    surveillance_gaz_haut_thread.join()
+    h2o_bas_thread.join()
+    ventilateur_thread.join()
+    pompe_thread.join()
+    commande_thread.join() 
